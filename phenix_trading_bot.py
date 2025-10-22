@@ -1,15 +1,16 @@
+import os
 import requests
 import pandas as pd
 import time
 from datetime import datetime
 
 # ============================================================
-# 🔹 CONFIGURATION TELEGRAM
+# 🔹 CONFIGURATION TELEGRAM (Render)
 # ============================================================
-TELEGRAM_TOKEN = "8235809690:AAEq9mGSH7GlyHj2mBuarAPMExbBUxtrHJM"  # <-- Mets ici le token que @BotFather t’a donné
-CHAT_ID = "1330710292"       # <-- Mets ici ton ID Telegram (avec @userinfobot)
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-# Fonction d’envoi de message Telegram
+# Fonction d’envoi Telegram
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": message}
@@ -19,7 +20,7 @@ def send_telegram_message(message):
     else:
         print(f"❌ Erreur Telegram : {response.text}")
 
-# 🔥 Test immédiat
+# 🔥 Message test immédiat
 send_telegram_message("🚀 Test de connexion : le bot Phénix Trading est opérationnel !")
 
 # ============================================================
@@ -39,19 +40,18 @@ def get_crypto_data():
     return df[["name", "symbol", "current_price", "market_cap", "total_volume", "price_change_percentage_24h"]]
 
 def analyze_crypto(df):
-    # Ratio volume/capitalisation
     df['volume_to_cap_ratio'] = df['total_volume'] / df['market_cap']
 
-    # Calcul du RSI (simplifié sur base des variations de prix)
+    # RSI simplifié (estimation sur 24h)
     df['price_change_24h'] = df['price_change_percentage_24h']
-    df['RSI'] = 50 + (df['price_change_24h'] * 2)  # estimation grossière (simplifiée)
+    df['RSI'] = 50 + (df['price_change_24h'] * 2)
 
-    # Sélection des cryptos prometteuses
+    # Critères cryptos prometteuses
     promising = df[
-        (df['RSI'] < 55) &  # Pas trop suracheté
-        (df['RSI'] > 45) &  # Pas survendu
-        (df['volume_to_cap_ratio'] > 0.05) &  # Volume significatif
-        (df['market_cap'] > 1e8)  # Market cap > 100M
+        (df['RSI'] < 55) &
+        (df['RSI'] > 45) &
+        (df['volume_to_cap_ratio'] > 0.05) &
+        (df['market_cap'] > 1e8)
     ]
 
     return promising
@@ -90,3 +90,4 @@ def main():
 # ============================================================
 if __name__ == "__main__":
     main()
+
